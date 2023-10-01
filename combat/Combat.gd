@@ -5,7 +5,7 @@ signal register_combat(combat_node: Node)
 signal turn_advanced(combatant: Dictionary)
 signal combatant_added(combatant: Dictionary)
 signal combatant_died(combatant: Dictionary)
-signal update_turn_queue(combatants: Array, turn_queue: Array)
+signal update_turn_queue(combatants: Array)
 signal update_information(text: String)
 signal update_combatants(combatants: Array)
 signal combat_finished()
@@ -32,7 +32,7 @@ var groups = [
 
 var current_combatant = 0
 var turn = 0
-var turn_queue = [0, 1, 3, 4, 5, 2]
+var turn_queue = []
 
 @export var game_ui : Control
 @export var controller : CController
@@ -57,8 +57,8 @@ func _ready():
 	add_combatant(create_combatant(CombatantDatabase.combatants["goblin"], "Goblin 1"), 1, Vector2i(10,5))
 	add_combatant(create_combatant(CombatantDatabase.combatants["goblin"], "Goblin 2"), 1, Vector2i(10,7))
 	add_combatant(create_combatant(CombatantDatabase.combatants["goblin"], "Goblin 3"), 1, Vector2i(10,9))
-	
-	emit_signal("update_turn_queue", combatants, turn_queue)
+
+	emit_signal("update_turn_queue", combatants)
 	
 	controller.controlled_node = combatants[0].sprite
 	game_ui.set_skill_list(combatants[turn_queue[0]].skill_list)
@@ -80,38 +80,6 @@ func create_combatant(definition: CombatantDefinition, override_name = ""):
 		comb.name = override_name
 	return comb
 
-
-#func add_combatant(definition: CombatantDefinition, side: int, position: Vector2i, override_name = ""):
-#	var comb = {
-#		"name" = definition.name,
-#		"max_hp" = definition.max_hp,
-#		"hp" = definition.max_hp,
-#		"position" = position,
-#		"side" = side,
-#		"class" = definition.class_t,
-#		"alive" = true,
-#		"texture" = definition.texture,
-#		"sprite" = null,
-#		"skill_list" = skills_lists[definition.class_t]
-#		}
-#	if override_name != "":
-#		comb.name = override_name
-#	combatants.append(comb)
-#	groups[side].append(combatants.size() - 1)
-#
-#	var new_combatant_sprite = Sprite2D.new()
-#	new_combatant_sprite.texture = comb.texture
-#	$"../Terrain/TileMap".add_child(new_combatant_sprite)
-#	new_combatant_sprite.position = Vector2(position * 32.0) + Vector2(16, 16)
-#	new_combatant_sprite.z_index = 1
-#	if side == 0:
-#		new_combatant_sprite.flip_h = true
-#	comb.sprite = new_combatant_sprite
-#	emit_signal("combatant_added", comb)
-#	game_ui.emit_signal("combatant_added", comb, side)
-#	game_ui.emit_signal("update_combatants", combatants, groups)
-
-
 func add_combatant(combatant: Dictionary, side: int, position: Vector2i):
 	combatant["position"] = position
 	combatant["side"] = side
@@ -127,6 +95,15 @@ func add_combatant(combatant: Dictionary, side: int, position: Vector2i):
 	if side == 0:
 		new_combatant_sprite.flip_h = true
 	combatant["sprite"] = new_combatant_sprite
+	
+	# If this is the first combatant added, insert 0.
+	if turn_queue.is_empty():
+		turn_queue.append(0)
+	# Otherwise, increment the last value and append it to the turn_queue.
+	else:
+		var newCount = turn_queue[-1] + 1
+		turn_queue.append(newCount)
+	
 	emit_signal("combatant_added", combatant)
 
 
@@ -257,23 +234,6 @@ func sort_weight_array(a, b):
 		return true
 	else:
 		return false
-
-
-#func ai_process(comb : Dictionary):
-#	var skill = SkillDatabase.skills["attack_melee"]
-#	var weight_array = []
-#	if comb.class == UnitClass.Melee:
-#		for target_comb_index in groups[Group.PLAYERS]:
-#			var target_comb = combatants[target_comb_index]
-#			var prob = calc_skill_prob(skill, get_distance(comb, target_comb))
-#			#append a weight, index 0 = weight, index 1 = target
-#			weight_array.append([prob / 100.0, target_comb])
-#		weight_array.sort_custom(sort_weight_array)
-#		var potential_targets_count = weight_array.size()
-#		if potential_targets_count > 0:
-#			do_damage(comb, ai_pick_target(weight_array), skill)
-#	advance_turn()
-
 
 func ai_process(comb : Dictionary):
 	var nearest_target: Dictionary

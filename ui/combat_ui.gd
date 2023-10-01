@@ -17,10 +17,9 @@ func add_turn_queue_icon(combatant: Dictionary):
 	new_icon.name = combatant.name
 
 
-func update_turn_queue(combatants: Array, turn_queue: Array):
-	for c in turn_queue:
-		var comb = combatants[c]
-		add_turn_queue_icon(comb)
+func update_turn_queue(combatants: Array):
+	for c in combatants:
+		add_turn_queue_icon(c)
 
 
 func combatant_died(combatant):
