@@ -182,15 +182,15 @@ func find_path(tile_position: Vector2i):
 		tile_position += dir
 	_path = _astargrid.get_point_path(current_position, tile_position)
 	queue_redraw()
-#	print(_path)
+	# print(_path)
 
 
 func move_player():
 	var current_position = tile_map.local_to_map(controlled_node.position)
 	var _path_size = _path.size()
-	if _path_size > 1 and _path_size - 1 <= movement:
+	if _path_size > 1 and movement > 0:
 		move_on_path(current_position)
-
+		
 
 func move_on_path(current_position):
 	_previous_position = current_position
@@ -198,7 +198,6 @@ func move_on_path(current_position):
 	_next_position = _path[_position_id]
 	_arrived = false
 	queue_redraw()
-
 
 var _selected_skill: String
 
